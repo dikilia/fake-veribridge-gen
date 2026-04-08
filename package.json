@@ -1,7 +1,7 @@
 {
   "name": "fake-veribridge-gen",
   "version": "1.0.0",
-  "description": "Fake VeriBridge Generator with is.gd URL shortening",
+  "description": "Fake VeriBridge Gen - Auto converts any Roblox URL to is.gd short links",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
