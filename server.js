@@ -68,10 +68,14 @@ app.post('/api/generate', (req, res) => {
         const fallbackIsGd = `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
         const finalShortUrl = shortUrl || fallbackIsGd;
         
+        // Generate a random is.gd holder URL (for the current domain)
+        const isGdHolder = `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
+        
         // Store the mapping with is.gd URL
         verifyLinks.set(verifyCode, {
             originalUrl: url,
             isGdUrl: finalShortUrl,
+            isGdHolder: isGdHolder,
             verifyCode: verifyCode,
             createdAt: Date.now()
         });
@@ -81,7 +85,8 @@ app.post('/api/generate', (req, res) => {
             originalUrl: url,
             generatedUrl: generatedLink,
             verifyCode: verifyCode,
-            isGdUrl: finalShortUrl
+            isGdUrl: finalShortUrl,
+            isGdHolder: isGdHolder
         });
     });
 });
@@ -100,15 +105,19 @@ app.get('/verify=:code', (req, res) => {
     
     let html = fs.readFileSync(htmlPath, 'utf8');
     
-    // Generate random is.gd code for the current domain holder
-    const domainShortCode = Math.random().toString(36).substring(2, 8);
-    const isGdDomainUrl = `https://is.gd/${domainShortCode}`;
+    // Use the stored is.gd URLs or create fallbacks
+    const isGdUrl = linkData?.isGdUrl || `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
+    const isGdHolder = linkData?.isGdHolder || `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
     
     // Replace placeholders
     html = html.replace(/\{\{VERIFY_CODE\}\}/g, code);
-    html = html.replace(/\{\{ORIGINAL_URL\}\}/g, linkData?.isGdUrl || 'https://is.gd/placeholder');
-    html = html.replace(/\{\{CURRENT_DOMAIN\}\}/g, isGdDomainUrl);
-    html = html.replace(/\{\{IS_GD_HOLDER\}\}/g, isGdDomainUrl);
+    html = html.replace(/\{\{ORIGINAL_URL\}\}/g, isGdUrl);
+    html = html.replace(/\{\{CURRENT_DOMAIN\}\}/g, isGdHolder);
+    html = html.replace(/\{\{IS_GD_HOLDER\}\}/g, isGdHolder);
+    
+    console.log(`[Server] Serving verification page for code: ${code}`);
+    console.log(`[Server] is.gd URL: ${isGdUrl}`);
+    console.log(`[Server] is.gd Holder: ${isGdHolder}`);
     
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
