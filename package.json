@@ -1,0 +1,12 @@
+{
+  "name": "fake-veribridge-gen",
+  "version": "1.0.0",
+  "description": "Fake VeriBridge Generator - Creates fake Roblox verification links",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
